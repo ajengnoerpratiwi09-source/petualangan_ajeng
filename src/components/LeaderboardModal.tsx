@@ -212,7 +212,7 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
             </div>
             <div>
               <h2 className="font-pirate text-2xl sm:text-3xl text-amber-300 font-bold tracking-wide">
-                Papan Peringkat Pelaut Matematika
+                Papan Peringkat Bajak Laut Penjelajah
               </h2>
               <p className="text-xs text-amber-200/70">
                 Kompetisi siswa samudra real-time antar teman sekelas & sekolah

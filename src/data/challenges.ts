@@ -1,4 +1,5 @@
-import { MathChallenge } from '../types';
+import { MathChallenge, MathQuestion, SubjectCategory } from '../types';
+import { SUBJECT_QUESTIONS } from './generalQuestions';
 
 export const MATH_CHALLENGES: MathChallenge[] = [
   {
@@ -873,3 +874,70 @@ export const MATH_CHALLENGES: MathChallenge[] = [
     }
   }
 ];
+
+export const getChallengesForSubject = (subject: SubjectCategory): MathChallenge[] => {
+  if (subject === 'math') {
+    return MATH_CHALLENGES;
+  }
+
+  return MATH_CHALLENGES.map((base) => {
+    let questionsForLevel: MathQuestion[] | null =
+      (SUBJECT_QUESTIONS[subject] && SUBJECT_QUESTIONS[subject][base.id]) || null;
+
+    if (!questionsForLevel || questionsForLevel.length === 0) {
+      const allSubjectQuestions: MathQuestion[] = Object.values(SUBJECT_QUESTIONS[subject] || {}).flat();
+      if (allSubjectQuestions.length > 0) {
+        const startIdx = ((base.id - 1) * 3) % allSubjectQuestions.length;
+        questionsForLevel = [
+          allSubjectQuestions[startIdx % allSubjectQuestions.length],
+          allSubjectQuestions[(startIdx + 1) % allSubjectQuestions.length],
+          allSubjectQuestions[(startIdx + 2) % allSubjectQuestions.length]
+        ].map((q, idx) => ({
+          ...q,
+          id: base.id * 10 + idx + 1,
+          questionNumber: idx + 1,
+          questionTitle: `Pertanyaan ${idx + 1} dari 3: ${q.categoryLabel || base.islandName}`
+        }));
+      }
+    }
+
+    if (subject === 'all') {
+      const indonesianPool = Object.values(SUBJECT_QUESTIONS.indonesian).flat();
+      const historyPool = Object.values(SUBJECT_QUESTIONS.history).flat();
+      const civicsPool = Object.values(SUBJECT_QUESTIONS.civics).flat();
+      const englishPool = Object.values(SUBJECT_QUESTIONS.english).flat();
+      const socialPool = Object.values(SUBJECT_QUESTIONS.social_studies).flat();
+      const newsPool = Object.values(SUBJECT_QUESTIONS.news).flat();
+      const mathPool = base.questions;
+
+      const pools = [
+        mathPool[0] || indonesianPool[0],
+        indonesianPool[(base.id - 1) % indonesianPool.length],
+        historyPool[(base.id - 1) % historyPool.length],
+        civicsPool[(base.id - 1) % civicsPool.length],
+        englishPool[(base.id - 1) % englishPool.length],
+        socialPool[(base.id - 1) % socialPool.length],
+        newsPool[(base.id - 1) % newsPool.length]
+      ];
+
+      const q1 = pools[(base.id * 2) % pools.length];
+      const q2 = pools[(base.id * 2 + 1) % pools.length];
+      const q3 = pools[(base.id * 2 + 2) % pools.length];
+
+      questionsForLevel = [q1, q2, q3].map((q, idx) => ({
+        ...q,
+        id: base.id * 100 + idx + 1,
+        questionNumber: idx + 1,
+        questionTitle: `Pertanyaan ${idx + 1} dari 3: ${q.categoryLabel || 'Tantangan Pengetahuan'}`
+      }));
+    }
+
+    const finalQuestions =
+      questionsForLevel && questionsForLevel.length >= 3 ? questionsForLevel : base.questions;
+
+    return {
+      ...base,
+      questions: finalQuestions
+    };
+  });
+};

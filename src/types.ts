@@ -41,16 +41,39 @@ export interface UserProfile {
   gamesPlayed: number;
 }
 
+export type SubjectCategory =
+  | 'all'
+  | 'math'
+  | 'indonesian'
+  | 'history'
+  | 'civics'
+  | 'english'
+  | 'social_studies'
+  | 'news';
+
+export interface SubjectInfo {
+  id: SubjectCategory;
+  name: string;
+  shortName: string;
+  icon: string;
+  color: string;
+  borderColor: string;
+  badgeBg: string;
+  description: string;
+}
+
 export interface MathQuestion {
   id: number;
   questionNumber: number;
   questionTitle?: string;
+  category?: SubjectCategory;
+  categoryLabel?: string;
   questionText: string;
-  equation: string;
+  equation?: string;
   options: {
     id: 'A' | 'B' | 'C';
     text: string;
-    value: number;
+    value?: number | string;
   }[];
   correctAnswer: 'A' | 'B' | 'C';
   explanation: string;

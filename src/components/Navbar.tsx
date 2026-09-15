@@ -9,9 +9,12 @@ import {
   User,
   Heart,
   Map as MapIcon,
-  Compass
+  Compass,
+  BookOpen,
+  Home
 } from 'lucide-react';
-import { UserProfile } from '../types';
+import { UserProfile, SubjectCategory } from '../types';
+import { SUBJECTS } from '../data/subjects';
 import { audio } from '../utils/audio';
 
 interface NavbarProps {
@@ -21,12 +24,15 @@ interface NavbarProps {
   currentLevel: number;
   totalLevels: number;
   isAudioMuted: boolean;
+  currentSubject: SubjectCategory;
   onToggleAudio: () => void;
   onOpenMap: () => void;
   onOpenShop: () => void;
   onOpenInventory: () => void;
   onOpenLeaderboard: () => void;
   onOpenProfile: () => void;
+  onOpenSubjects: () => void;
+  onGoToLobby?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -36,13 +42,17 @@ export const Navbar: React.FC<NavbarProps> = ({
   currentLevel,
   totalLevels,
   isAudioMuted,
+  currentSubject,
   onToggleAudio,
   onOpenMap,
   onOpenShop,
   onOpenInventory,
   onOpenLeaderboard,
-  onOpenProfile
+  onOpenProfile,
+  onOpenSubjects,
+  onGoToLobby
 }) => {
+  const activeSubjectInfo = SUBJECTS.find((s) => s.id === currentSubject) || SUBJECTS[0];
   return (
     <header className="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b-2 border-amber-900/60 shadow-lg px-3 py-2.5 sm:px-6">
       <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2 sm:gap-4">
@@ -51,10 +61,14 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={() => {
               audio.playButtonClick();
-              onOpenMap();
+              if (onGoToLobby) {
+                onGoToLobby();
+              } else {
+                onOpenMap();
+              }
             }}
-            className="flex items-center gap-2 text-left group focus:outline-none"
-            title="Buka Peta Petualangan"
+            className="flex items-center gap-2 text-left group focus:outline-none cursor-pointer"
+            title="Kembali ke Markas / Lobby"
           >
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 border-2 border-amber-300 flex items-center justify-center shadow-md shadow-amber-900/40 group-hover:scale-105 transition-transform">
               <Compass className="w-6 h-6 text-slate-950 animate-spin-slow" />
@@ -62,7 +76,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="font-pirate text-lg sm:text-xl font-bold tracking-wide text-amber-400 group-hover:text-amber-300 transition-colors">
-                  Bajak Laut Matematika
+                  Bajak Laut Penjelajah
                 </span>
               </div>
               <p className="text-xs text-amber-200/70 hidden sm:block">
@@ -121,6 +135,34 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Navigation Action Buttons */}
         <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Tombol Kembali ke Lobby */}
+          {onGoToLobby && (
+            <button
+              onClick={() => {
+                audio.playButtonClick();
+                onGoToLobby();
+              }}
+              className="p-2 sm:px-3 sm:py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/50 flex items-center gap-1.5 text-xs font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-sm"
+              title="Kembali ke Markas / Lobby Game"
+            >
+              <Home className="w-4 h-4 text-amber-400" />
+              <span className="hidden sm:inline">Lobby</span>
+            </button>
+          )}
+
+          {/* Pilihan Pelajaran */}
+          <button
+            onClick={() => {
+              audio.playButtonClick();
+              onOpenSubjects();
+            }}
+            className="p-2 sm:px-3 sm:py-1.5 rounded-lg bg-sky-950/70 hover:bg-sky-900/80 text-sky-200 border border-sky-500/50 flex items-center gap-1.5 text-xs font-semibold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-sm"
+            title="Ganti Mata Pelajaran / Topik Soal"
+          >
+            <span className="text-sm sm:text-base leading-none">{activeSubjectInfo.icon}</span>
+            <span className="hidden md:inline font-bold">{activeSubjectInfo.shortName}</span>
+          </button>
+
           {/* Peta Tombol */}
           <button
             onClick={() => {

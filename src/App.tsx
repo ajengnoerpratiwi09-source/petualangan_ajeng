@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   UserProfile,
   ShopItem,
   HatItem,
   CoatItem,
   AccessoryItem,
-  CompanionAccessory
+  CompanionAccessory,
+  SubjectCategory
 } from './types';
-import { MATH_CHALLENGES } from './data/challenges';
+import { MATH_CHALLENGES, getChallengesForSubject } from './data/challenges';
+import { SUBJECTS } from './data/subjects';
 import { Navbar } from './components/Navbar';
 import { TreasureMap } from './components/TreasureMap';
 import { GameChallenge } from './components/GameChallenge';
@@ -16,8 +18,10 @@ import { FashionShopModal } from './components/FashionShopModal';
 import { InventoryModal } from './components/InventoryModal';
 import { LeaderboardModal } from './components/LeaderboardModal';
 import { CharacterProfileModal } from './components/CharacterProfileModal';
+import { SubjectSelectorModal } from './components/SubjectSelectorModal';
+import { Lobby } from './components/Lobby';
 import { audio } from './utils/audio';
-import { Compass, Ship, Waves, Sparkles, Map as MapIcon, RotateCcw } from 'lucide-react';
+import { Compass, Ship, Waves, Sparkles, Map as MapIcon, RotateCcw, BookOpen } from 'lucide-react';
 
 const INITIAL_PROFILE: UserProfile = {
   name: 'Samudra',
@@ -73,6 +77,9 @@ export default function App() {
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState<boolean>(false);
   const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
   const [isTreasureChestOpen, setIsTreasureChestOpen] = useState<boolean>(false);
+  const [isSubjectModalOpen, setIsSubjectModalOpen] = useState<boolean>(false);
+  const [currentSubject, setCurrentSubject] = useState<SubjectCategory>('all');
+  const [gameState, setGameState] = useState<'lobby' | 'playing'>('lobby');
 
   // Audio state
   const [isAudioMuted, setIsAudioMuted] = useState<boolean>(audio.getIsMuted());
@@ -113,8 +120,10 @@ export default function App() {
     setIsAudioMuted(nextMuted);
   };
 
-  const currentChallenge =
-    MATH_CHALLENGES.find((c) => c.id === currentLevel) || MATH_CHALLENGES[0];
+  // Dynamically compute challenges for current subject
+  const challenges = useMemo(() => getChallengesForSubject(currentSubject), [currentSubject]);
+  const currentChallenge = challenges.find((c) => c.id === currentLevel) || challenges[0];
+  const activeSubjectInfo = SUBJECTS.find((s) => s.id === currentSubject) || SUBJECTS[0];
 
   // Handle Correct Answer
   const handleAnswerCorrect = (timeSpent: number) => {
@@ -253,64 +262,121 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-amber-500 selection:text-slate-950">
-      {/* Top Navbar */}
-      <Navbar
-        profile={profile}
-        lives={lives}
-        maxLives={maxLives}
-        currentLevel={currentLevel}
-        totalLevels={MATH_CHALLENGES.length}
-        isAudioMuted={isAudioMuted}
-        onToggleAudio={handleToggleAudio}
-        onOpenMap={() => setIsMapOpen(true)}
-        onOpenShop={() => setIsShopOpen(true)}
-        onOpenInventory={() => setIsInventoryOpen(true)}
-        onOpenLeaderboard={() => setIsLeaderboardOpen(true)}
-        onOpenProfile={() => setIsProfileOpen(true)}
-      />
-
-      {/* Main Game Stage */}
-      <main className="flex-1 w-full max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6 flex flex-col justify-center">
-        {/* Quick Island Progress Breadcrumb */}
-        <div className="flex items-center justify-between gap-2 mb-3 px-2 text-xs text-amber-200/80">
-          <div className="flex items-center gap-2">
-            <Ship className="w-4 h-4 text-amber-400" />
-            <span>
-              Perjalanan: <strong>{currentChallenge.islandName}</strong> (Pulau {currentLevel} dari 10 • 3 Pertanyaan)
-            </span>
-          </div>
-
-          <button
-            onClick={() => {
-              audio.playButtonClick();
-              setIsMapOpen(true);
-            }}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-950/60 border border-amber-600/40 text-amber-300 hover:bg-amber-900/60 transition-colors"
-          >
-            <MapIcon className="w-3.5 h-3.5" />
-            <span>Lihat Seluruh Peta</span>
-          </button>
-        </div>
-
-        {/* Current Active Math Challenge */}
-        <GameChallenge
-          challenge={currentChallenge}
+      {gameState === 'lobby' ? (
+        <Lobby
           profile={profile}
-          lives={lives}
-          onAnswerCorrect={handleAnswerCorrect}
-          onAnswerIncorrect={handleAnswerIncorrect}
-          onRetryLevel={handleRetryLevel}
-          onGameOverRestart={handleGameOverRestart}
+          currentLevel={currentLevel}
+          completedLevels={completedLevels}
+          challenges={challenges}
+          currentSubject={currentSubject}
+          isAudioMuted={isAudioMuted}
+          onStartGame={() => setGameState('playing')}
+          onSelectSubject={(subj) => {
+            setCurrentSubject(subj);
+            setLives(3);
+          }}
           onOpenMap={() => setIsMapOpen(true)}
+          onOpenShop={() => setIsShopOpen(true)}
+          onOpenInventory={() => setIsInventoryOpen(true)}
+          onOpenLeaderboard={() => setIsLeaderboardOpen(true)}
+          onOpenProfile={() => setIsProfileOpen(true)}
+          onToggleAudio={handleToggleAudio}
         />
-      </main>
+      ) : (
+        <>
+          {/* Top Navbar */}
+          <Navbar
+            profile={profile}
+            lives={lives}
+            maxLives={maxLives}
+            currentLevel={currentLevel}
+            totalLevels={challenges.length}
+            isAudioMuted={isAudioMuted}
+            currentSubject={currentSubject}
+            onToggleAudio={handleToggleAudio}
+            onOpenMap={() => setIsMapOpen(true)}
+            onOpenShop={() => setIsShopOpen(true)}
+            onOpenInventory={() => setIsInventoryOpen(true)}
+            onOpenLeaderboard={() => setIsLeaderboardOpen(true)}
+            onOpenProfile={() => setIsProfileOpen(true)}
+            onOpenSubjects={() => setIsSubjectModalOpen(true)}
+            onGoToLobby={() => setGameState('lobby')}
+          />
 
-      {/* Footer / Nautical status */}
-      <footer className="py-3 px-4 text-center border-t border-amber-900/40 bg-slate-950 text-xs text-amber-200/60">
-        <p>
-          ⚓ Petualangan Bajak Laut Matematika • Selesaikan 10 Tantangan untuk Membuka Peti 500 Koin Emas & 100 Berlian
-        </p>
-      </footer>
+          {/* Main Game Stage */}
+          <main className="flex-1 w-full max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6 flex flex-col justify-center">
+            {/* Quick Island Progress & Subject Breadcrumb */}
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-3 px-2 text-xs text-amber-200/80">
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  onClick={() => {
+                    audio.playButtonClick();
+                    setGameState('lobby');
+                  }}
+                  className="flex items-center gap-1.5 bg-amber-950/70 hover:bg-amber-900/80 border border-amber-600/40 px-2.5 py-1 rounded-lg text-amber-300 transition-colors cursor-pointer"
+                  title="Kembali ke Lobby Utama"
+                >
+                  <span>🏠</span>
+                  <span className="font-bold">Lobby</span>
+                </button>
+
+                <div className="flex items-center gap-1.5 bg-amber-950/70 border border-amber-600/40 px-2.5 py-1 rounded-lg text-amber-300">
+                  <Ship className="w-3.5 h-3.5 text-amber-400" />
+                  <span>
+                    Perjalanan: <strong>{currentChallenge.islandName}</strong> (Pulau {currentLevel}/10)
+                  </span>
+                </div>
+
+                {/* Current Subject Badge with Switcher Button */}
+                <button
+                  onClick={() => {
+                    audio.playButtonClick();
+                    setIsSubjectModalOpen(true);
+                  }}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-950/70 border border-sky-500/40 text-sky-200 hover:bg-sky-900/80 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-xs"
+                  title="Ganti Mata Pelajaran atau Topik Soal"
+                >
+                  <span>{activeSubjectInfo.icon}</span>
+                  <span className="font-bold">{activeSubjectInfo.shortName}</span>
+                  <span className="text-[10px] text-sky-400 underline ml-0.5">Ubah</span>
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    audio.playButtonClick();
+                    setIsMapOpen(true);
+                  }}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-950/60 border border-amber-600/40 text-amber-300 hover:bg-amber-900/60 transition-colors"
+                >
+                  <MapIcon className="w-3.5 h-3.5" />
+                  <span>Lihat Peta</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Current Active Game Challenge */}
+            <GameChallenge
+              challenge={currentChallenge}
+              profile={profile}
+              lives={lives}
+              onAnswerCorrect={handleAnswerCorrect}
+              onAnswerIncorrect={handleAnswerIncorrect}
+              onRetryLevel={handleRetryLevel}
+              onGameOverRestart={handleGameOverRestart}
+              onOpenMap={() => setIsMapOpen(true)}
+            />
+          </main>
+
+          {/* Footer / Nautical status */}
+          <footer className="py-3 px-4 text-center border-t border-amber-900/40 bg-slate-950 text-xs text-amber-200/60">
+            <p>
+              ⚓ Bajak Laut Penjelajah • Selesaikan 10 Tantangan Pulau untuk Membuka Peti 500 Koin Emas & 100 Berlian
+            </p>
+          </footer>
+        </>
+      )}
 
       {/* MODALS */}
       {/* 1. Treasure Map Modal */}
@@ -318,7 +384,7 @@ export default function App() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-md animate-fade-in">
           <div className="w-full max-w-4xl max-h-[92vh] overflow-y-auto">
             <TreasureMap
-              challenges={MATH_CHALLENGES}
+              challenges={challenges}
               currentLevel={currentLevel}
               completedLevels={completedLevels}
               profile={profile}
@@ -326,6 +392,7 @@ export default function App() {
                 setCurrentLevel(levelId);
                 setLives(3);
                 setIsMapOpen(false);
+                setGameState('playing');
               }}
               onClose={() => setIsMapOpen(false)}
             />
@@ -376,6 +443,17 @@ export default function App() {
         profile={profile}
         onClose={() => setIsProfileOpen(false)}
         onSaveProfile={handleSaveProfile}
+      />
+
+      {/* 7. Subject & Curriculum Selector Modal */}
+      <SubjectSelectorModal
+        isOpen={isSubjectModalOpen}
+        onClose={() => setIsSubjectModalOpen(false)}
+        currentSubject={currentSubject}
+        onSelectSubject={(subj) => {
+          setCurrentSubject(subj);
+          setLives(3);
+        }}
       />
     </div>
   );

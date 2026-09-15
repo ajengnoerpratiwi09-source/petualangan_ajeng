@@ -540,10 +540,12 @@ export const GameChallenge: React.FC<GameChallengeProps> = ({
               {currentQuestion.questionText}
             </p>
 
-            {/* Giant Equation Board */}
-            <div className="inline-block p-4 sm:p-6 rounded-2xl bg-amber-950 text-amber-300 font-mono text-2xl sm:text-4xl font-bold shadow-inner border-2 border-amber-600/50 tracking-wider">
-              {currentQuestion.equation}
-            </div>
+            {/* Topic Badge / Equation Board */}
+            {currentQuestion.equation && (
+              <div className="inline-block p-3 sm:p-5 rounded-2xl bg-amber-950 text-amber-300 font-mono text-lg sm:text-2xl font-bold shadow-inner border-2 border-amber-600/50 tracking-wide max-w-full">
+                {currentQuestion.equation}
+              </div>
+            )}
           </div>
 
           {/* Options: A, B, C */}
@@ -739,15 +741,17 @@ export const GameChallenge: React.FC<GameChallengeProps> = ({
                   {correctOption?.text}
                 </div>
                 <div className="text-xs text-emerald-300 font-mono">
-                  Persamaan: {currentQuestion.equation.replace('?', String(correctOption?.value || ''))}
+                  {currentQuestion.equation?.includes('?')
+                    ? `Persamaan: ${currentQuestion.equation.replace('?', String(correctOption?.value || correctOption?.text || ''))}`
+                    : `Topik: ${currentQuestion.categoryLabel || currentQuestion.equation || 'Wawasan Pengetahuan'}`}
                 </div>
               </div>
 
-              {/* Reveal Step-by-Step Math Calculation */}
+              {/* Reveal Step-by-Step Math Calculation / Pembahasan */}
               <div className="p-4 rounded-xl bg-slate-900/90 border border-amber-600/40 text-xs sm:text-sm text-slate-200 space-y-1.5">
                 <p className="font-bold text-amber-400 flex items-center gap-1.5">
                   <Sparkles className="w-4 h-4 text-amber-400" />
-                  Cara Menghitung & Pembahasan:
+                  Kunci Jawaban & Pembahasan Lengkap:
                 </p>
                 <p className="text-slate-200 leading-relaxed">
                   {currentQuestion.explanation}

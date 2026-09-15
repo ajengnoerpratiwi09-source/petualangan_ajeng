@@ -1,6 +1,6 @@
 {
-  "name": "Petualangan Bajak Laut Matematika",
-  "description": "Game petualangan bajak laut menaklukkan 10 tantangan matematika, membuka peti harta karun 500 koin emas & 100 berlian, kustomisasi hero & hewan pendamping, inventaris artefak, dan papan peringkat global real-time.",
+  "name": "Bajak Laut Penjelajah",
+  "description": "Game petualangan bajak laut menaklukkan 10 pulau pengetahuan samudra nusantara, membuka peti harta karun 500 koin emas & 100 berlian, kustomisasi hero & hewan pendamping, inventaris artefak, dan papan peringkat penjelajah global.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
